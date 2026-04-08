@@ -1,5 +1,4 @@
 class Montaj < Formula
-  include Language::Python::Virtualenv
   desc "Video editing toolkit — local-first, CLI-driven, agent-friendly"
   homepage "https://github.com/theSamPadilla/montaj"
   url "https://github.com/theSamPadilla/montaj/archive/refs/tags/v0.1.0.tar.gz"
@@ -11,9 +10,12 @@ class Montaj < Formula
   depends_on "python@3.12"
 
   def install
-    # Python CLI, steps, and server
-    venv = virtualenv_create(libexec, "python3.12")
-    venv.pip_install_and_link buildpath
+    # Python CLI, steps, and server — explicit venv so all deps land in libexec
+    python = Formula["python@3.12"].opt_bin/"python3.12"
+    system python, "-m", "venv", libexec
+    system libexec/"bin/pip", "install", buildpath
+    bin.install_symlink libexec/"bin/montaj"
+    bin.install_symlink libexec/"bin/mtj"
 
     # Render engine
     system "npm", "install", "--prefix", "#{buildpath}/render"
