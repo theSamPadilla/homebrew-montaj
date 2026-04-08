@@ -1,4 +1,5 @@
 class Montaj < Formula
+  include Language::Python::Virtualenv
   desc "Video editing toolkit — local-first, CLI-driven, agent-friendly"
   homepage "https://github.com/theSamPadilla/montaj"
   url "https://github.com/theSamPadilla/montaj/archive/refs/tags/v0.1.0.tar.gz"
@@ -6,7 +7,6 @@ class Montaj < Formula
   license "MIT"
   head "https://github.com/theSamPadilla/montaj.git", branch: "main"
 
-  depends_on "ffmpeg"
   depends_on "node"
   depends_on "python@3.12"
 
