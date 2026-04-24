@@ -6,12 +6,15 @@ class Montaj < Formula
   license "MIT"
   head "https://github.com/theSamPadilla/montaj.git", branch: "main"
 
+  # No native dylibs to relocate — everything runs inside a Python venv.
+  # Without this, Homebrew fails on Rust-compiled wheels (e.g. nh3) whose
+  # compact Mach-O headers can't be rewritten by install_name_tool.
+  pour_bottle? only_if: :any_skip_relocation
+
   depends_on "ffmpeg"
   depends_on "node"
   depends_on "python@3.12"
 
-  # Skip Homebrew's dylib relocation on the Python venv — Rust-compiled wheels
-  # (e.g. nh3) have compact Mach-O headers that can't be rewritten.
   skip_clean "libexec"
 
   def install
