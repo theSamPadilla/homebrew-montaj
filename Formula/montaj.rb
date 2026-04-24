@@ -10,6 +10,10 @@ class Montaj < Formula
   depends_on "node"
   depends_on "python@3.12"
 
+  # Skip Homebrew's dylib relocation on the Python venv — Rust-compiled wheels
+  # (e.g. nh3) have compact Mach-O headers that can't be rewritten.
+  skip_clean "libexec"
+
   def install
     # Python CLI, steps, and server — explicit venv so all deps land in libexec
     python = Formula["python@3.12"].opt_bin/"python3.12"
