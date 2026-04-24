@@ -1,11 +1,12 @@
 class Montaj < Formula
   desc "Video editing toolkit — local-first, CLI-driven, agent-friendly"
   homepage "https://github.com/theSamPadilla/montaj"
-  url "https://github.com/theSamPadilla/montaj/archive/refs/tags/v0.1.0.tar.gz"
-  sha256 "678c04da9fb03be37c8a7a04af5a184b1a1a27a9c378e4ca04e560c36a33758d"
+  url "https://github.com/theSamPadilla/montaj/archive/refs/tags/v2.0.0.tar.gz"
+  sha256 "e9385c78c428ed4b8b63375c02dab2d574bceb0aed8ff6f58d23bc0553b5b067"
   license "MIT"
   head "https://github.com/theSamPadilla/montaj.git", branch: "main"
 
+  depends_on "ffmpeg"
   depends_on "node"
   depends_on "python@3.12"
 
@@ -27,14 +28,18 @@ class Montaj < Formula
 
   def caveats
     <<~EOS
+      Run montaj doctor to verify your setup.
+
+      HDR video support requires ffmpeg built with zscale (libzimg).
+      Homebrew's default ffmpeg does NOT include it. Fix:
+        montaj install ffmpeg
+      Or run `montaj doctor` for manual alternatives.
+
       Download whisper model weights to enable transcription:
         montaj install whisper
 
       Optional — background removal support:
         montaj install rvm
-
-      API keys for adaptors are stored in:
-        ~/.montaj/credentials.json
     EOS
   end
 
