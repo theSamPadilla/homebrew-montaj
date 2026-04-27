@@ -1,8 +1,8 @@
 class Montaj < Formula
   desc "Video editing toolkit — local-first, CLI-driven, agent-friendly"
   homepage "https://github.com/theSamPadilla/montaj"
-  url "https://github.com/theSamPadilla/montaj/archive/refs/tags/v2.0.3.tar.gz"
-  sha256 "85e860b21a246185db8b9fdaad56fc9d96e4e80b6fa628b5365ac303e7982c09"
+  url "https://github.com/theSamPadilla/montaj/archive/refs/tags/v2.0.4.tar.gz"
+  sha256 "2e86c45fd41c1c31beda61d77bfd3ff7301677e66c4f8550b61dd047586db93b"
   license "MIT"
   head "https://github.com/theSamPadilla/montaj.git", branch: "main"
 
@@ -13,35 +13,29 @@ class Montaj < Formula
   skip_clean "libexec"
 
   def install
-    # Python CLI, steps, and server — explicit venv so all deps land in libexec
     python = Formula["python@3.12"].opt_bin/"python3.12"
-    system python, "-m", "venv", libexec
+    # --copies makes the venv self-contained instead of symlinking back to
+    # python@3.12; protects the install across keg upgrades or relocations.
+    system python, "-m", "venv", "--copies", libexec
     system libexec/"bin/pip", "install", buildpath
     bin.install_symlink libexec/"bin/montaj"
     bin.install_symlink libexec/"bin/mtj"
-
-    # Render engine
-    system "npm", "install", "--prefix", "#{buildpath}/render"
-
-    # UI — install and build
-    system "npm", "install", "--prefix", "#{buildpath}/ui"
-    system "npm", "run", "build", "--prefix", "#{buildpath}/ui"
   end
 
   def caveats
     <<~EOS
-      Run montaj doctor to verify your setup.
+      First-run setup (one-time):
+        montaj doctor               # diagnose what's missing — gives exact next steps
+        montaj install ui           # almost always needed (builds UI into ~/.cache/montaj/)
 
       HDR video support requires ffmpeg built with zscale (libzimg).
       Homebrew's default ffmpeg does NOT include it. Fix:
         montaj install ffmpeg
       Or run `montaj doctor` for manual alternatives.
 
-      Download whisper model weights to enable transcription:
-        montaj install whisper
-
-      Optional — background removal support:
-        montaj install rvm
+      Optional:
+        montaj install whisper      # transcription model weights
+        montaj install rvm          # background-removal weights
     EOS
   end
 
