@@ -6,9 +6,70 @@ class Montaj < Formula
   license "MIT"
   head "https://github.com/theSamPadilla/montaj.git", branch: "main"
 
-  depends_on "ffmpeg"
   depends_on "node"
   depends_on "python@3.12"
+
+  # montaj bundles its own ffmpeg/ffprobe instead of depending on Homebrew's
+  # ffmpeg formula because HDR video support requires zscale (libzimg), which
+  # Homebrew-core's ffmpeg does not build in. These are pinned, checksummed
+  # static builds from https://ffmpeg.martin-riedl.de (config includes
+  # --enable-libzimg). The same pins are mirrored in montaj's
+  # lib/ffmpeg_static.py (used by the non-Homebrew managed-install path), and
+  # a sync test in montaj's test suite asserts the two stay in lockstep, so
+  # update both sides together on a version bump. Only one of the branches
+  # below is ever evaluated for a given install, so the repeated "ffmpeg" /
+  # "ffprobe" resource names never actually collide.
+  on_macos do
+    on_arm do
+      resource "ffmpeg" do
+        url "https://ffmpeg.martin-riedl.de/download/macos/arm64/1783011502_8.1.2/ffmpeg.zip"
+        sha256 "ef1aa60006c7b77ce170c1608c08d8e4ba1c30c5746f2ac986ded932d0ac2c3c"
+      end
+
+      resource "ffprobe" do
+        url "https://ffmpeg.martin-riedl.de/download/macos/arm64/1783011502_8.1.2/ffprobe.zip"
+        sha256 "c39787f4af7a3932502d2d48db6f6feaaa836b48a73ef78c32cc3285df61dfaf"
+      end
+    end
+
+    on_intel do
+      resource "ffmpeg" do
+        url "https://ffmpeg.martin-riedl.de/download/macos/amd64/1783018342_8.1.2/ffmpeg.zip"
+        sha256 "a52ef43883f44c219766d4b3bdde4e635b35465d0b704c01c3a0566b59775df9"
+      end
+
+      resource "ffprobe" do
+        url "https://ffmpeg.martin-riedl.de/download/macos/amd64/1783018342_8.1.2/ffprobe.zip"
+        sha256 "5408ca588c8c72b0dde3afe676d0a7acf25ef97e55ae6eba5c7bede1cda42695"
+      end
+    end
+  end
+
+  on_linux do
+    on_intel do
+      resource "ffmpeg" do
+        url "https://ffmpeg.martin-riedl.de/download/linux/amd64/1783011670_8.1.2/ffmpeg.zip"
+        sha256 "56452c0bfc4ee0325cd615d62f46ba8264f62eed34f727c2224c6c84fa7b8719"
+      end
+
+      resource "ffprobe" do
+        url "https://ffmpeg.martin-riedl.de/download/linux/amd64/1783011670_8.1.2/ffprobe.zip"
+        sha256 "c6f2d36e98f9a4445fad0b0be539f4c4faf13fd502116bf131becd53f56cd390"
+      end
+    end
+
+    on_arm do
+      resource "ffmpeg" do
+        url "https://ffmpeg.martin-riedl.de/download/linux/arm64/1783010599_8.1.2/ffmpeg.zip"
+        sha256 "ab9e16864b6bf4ae7e13bbdbdc29621be11a5c547c57af8d4250e9fa2f5e6461"
+      end
+
+      resource "ffprobe" do
+        url "https://ffmpeg.martin-riedl.de/download/linux/arm64/1783010599_8.1.2/ffprobe.zip"
+        sha256 "fb78317b81cdeb614533be59e489019b754afd199670666af28f0e9574be395b"
+      end
+    end
+  end
 
   skip_clean "libexec"
 
@@ -20,6 +81,17 @@ class Montaj < Formula
     system libexec/"bin/pip", "install", buildpath
     bin.install_symlink libexec/"bin/montaj"
     bin.install_symlink libexec/"bin/mtj"
+
+    # For this venv, sys.prefix == libexec, so lib/common.py's ffmpeg/ffprobe
+    # resolver finds these at sys.prefix/vendor/ffmpeg/. They're deliberately
+    # NOT symlinked into bin/, to avoid colliding with a user's own ffmpeg on
+    # PATH. They're also static + notarized, so Homebrew's fix_dynamic_linkage
+    # has nothing to relocate and their signature stays valid as-is, which is
+    # why they live outside each_native_lib's glob and must not be re-signed.
+    (libexec/"vendor/ffmpeg").mkpath
+    resource("ffmpeg").stage  { (libexec/"vendor/ffmpeg").install "ffmpeg" }
+    resource("ffprobe").stage { (libexec/"vendor/ffmpeg").install "ffprobe" }
+    chmod 0755, [libexec/"vendor/ffmpeg/ffmpeg", libexec/"vendor/ffmpeg/ffprobe"]
 
     # Strip the pip-installed native libs' ad-hoc signatures before Homebrew's
     # post-install `fix_dynamic_linkage` rewrites their install-names via the
@@ -65,11 +137,6 @@ class Montaj < Formula
       First-run setup (one-time):
         montaj doctor               # diagnose what's missing — gives exact next steps
         montaj install ui           # almost always needed (builds UI into ~/.cache/montaj/)
-
-      HDR video support requires ffmpeg built with zscale (libzimg).
-      Homebrew's default ffmpeg does NOT include it. Fix:
-        montaj install ffmpeg
-      Or run `montaj doctor` for manual alternatives.
 
       Optional:
         montaj install whisper      # transcription model weights
