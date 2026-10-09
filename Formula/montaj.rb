@@ -1,8 +1,8 @@
 class Montaj < Formula
   desc "Video editing toolkit — local-first, CLI-driven, agent-friendly"
   homepage "https://github.com/theSamPadilla/montaj"
-  url "https://github.com/theSamPadilla/montaj/archive/refs/tags/v5.28.2.tar.gz"
-  sha256 "737ce2c186850dcce377b6bad015530b997f678490b2a6590a1a092bc1114a11"
+  url "https://github.com/theSamPadilla/montaj/archive/refs/tags/v5.28.3.tar.gz"
+  sha256 "9c002d7609eb625a3233f360f6affef176a13fcf617ea559ac8c7e308c3d1903"
   license "MIT"
   head "https://github.com/theSamPadilla/montaj.git", branch: "main"
 
